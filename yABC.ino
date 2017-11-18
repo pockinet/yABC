@@ -6,10 +6,12 @@
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-long startzeit;
-long sekunden; 
-int minuten = 0;
-
+long startingTime;
+int buzzerPin = 10;
+long isSeconds; 
+int isMinutes = 0;
+int targetTime;
+int cyclestart = 0;
 int startTime;
 int overshoot = 2;
 int heaterPin = 7;
@@ -20,40 +22,48 @@ int tempEncoderPinALast = LOW;
 int x = LOW;
 int timeEncoderPinA = 5;
 int timeEncoderPinB = 6;
-int targetTime = 0;
+int targetMin = 0;
+int targetSec = 0;
 int timeEncoderPinALast = LOW;
 int y = LOW;
 int timerStart = 0;
-int previousMillis = 0;
 int timeEncoderButtonPin = 8;
+int tempEncoderButtonPin = 9;
 
 void setup() {
   sensors.begin();
   pinMode (tempEncoderPinA, INPUT);
   pinMode (tempEncoderPinB, INPUT);
   Serial.begin (9600);
-  Serial<<"Welcome!"<<endl;
-  startzeit = millis();
+  startingTime = millis();
 }
 
 
 void loop() {
-  unsigned long interval = minuten * 60 * 1000UL;
-  sensors.requestTemperatures();
-  sensors.getTempCByIndex(0)
+  killCycle();
+  start();
+  readSensors();
   readTempEncoder();
-  readTimeEncoder(); 
-  homescreen();
+  readTimeEncoder();
+  timecalc();
+  timeCounter();
   heater();
+  screen();
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-void homescreen(){
-  Serial<<"Temp.: "<<sensors.getTempCByIndex(0)<<" °C"<<"/"<<targetTemp<<" °C"<<endl
+void screen(){
+  Serial<<"Temp.: "<<sensors.getTempCByIndex(0)<<" °C"<<"/"<<targetTemp<<" °C"<<endl;
+  Serial<<"Time: "<<isMinutes<<":"<<isSeconds<<"/"<<targetMin<<":"<<targetSec<<endl;
 }
 
-void readTempEncoder() {
+void readSensors(){
+  sensors.requestTemperatures();
+  sensors.getTempCByIndex(0);
+}
+
+void readTempEncoder(){
   x = digitalRead(tempEncoderPinA);
   if ((tempEncoderPinALast == LOW) && (x == HIGH)) {
     if (digitalRead(tempEncoderPinB) == LOW) {
@@ -65,7 +75,7 @@ void readTempEncoder() {
   tempEncoderPinALast = x;
 }
 
-void readTimeEncoder() {
+void readTimeEncoder(){
   y = digitalRead(timeEncoderPinA);
   if ((timeEncoderPinALast == LOW) && (y == HIGH)) {
     if (digitalRead(timeEncoderPinB) == LOW) {
@@ -78,7 +88,7 @@ void readTimeEncoder() {
 }
 
 void heater(){
-  if (sensors.getTempCByIndex(0) < tagrgetTemp + overshoot && start == 1){
+  if (sensors.getTempCByIndex(0) < targetTemp + overshoot && cyclestart == 1){
     digitalWrite(heaterPin, HIGH);
     timerStart = 1;
   }
@@ -87,34 +97,53 @@ void heater(){
   }
 }
 
-void timer(){
-  if (timerstart = 1){
-    previousMillis == millis();
-  }
-  if(millis() - previousMillis > targetTime){
-  
-  }  
-}
-
 void start(){
-  if (digitalRead(tempEncoderButtonPin) == 1){
-    start = 1;
+  if (digitalRead(tempEncoderButtonPin) == HIGH && digitalRead(tempEncoderButtonPin) == LOW){
+    cyclestart = 1;
   }
 }
 
 void kill(){
-  if (digitalRead(timeEncoderButtonPin) == 1){
-    start = 0;
+  if (digitalRead(timeEncoderButtonPin) == HIGH){
+    cyclestart = 0;
   }
 }
 
-void timeCounter() {
-  sekunden = millis() - startzeit;
-  sekunden = sekunden / 1000;
-  if (sekunden == 60){
-    minuten++;
-    startzeit = millis();
+void timeCounter(){
+  if (timerStart == 1){
+    isSeconds = millis() - startingTime;
+    isSeconds = isSeconds / 1000;
+    if (isSeconds == 60){
+      isMinutes++;
+      startingTime = millis();
+    }
   }
-  Serial<<"Es sind "<<minuten<<" Minuten und "<<sekunden<<" Sekunden vergangen."<<endl;
-  delay(1000);
 }
+
+void timecalc(){
+  targetSec = targetTime;
+  if (targetTime == 60){
+    targetMin++;
+    targetTime = 0;
+  }
+  if (targetTime < 0){
+    targetMin--;
+    targetTime = 59;
+  }
+  if (targetMin < 0){
+    targetMin = 0;
+  }
+}
+
+void killCycle(){
+  if (targetMin == isMinutes && targetSec == isSeconds){
+    cyclestart = 0;
+    digitalWrite (buzzerPin, HIGH);
+  } else {
+      digitalWrite (buzzerPin, LOW);
+  }
+  if (digitalRead(timeEncoderButtonPin) == HIGH && digitalRead(tempEncoderButtonPin) == HIGH){
+    cyclestart = 0;
+  }
+}
+
