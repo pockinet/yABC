@@ -6,6 +6,10 @@
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
+long startzeit;
+long sekunden; 
+int minuten = 0;
+
 int startTime;
 int overshoot = 2;
 int heaterPin = 7;
@@ -29,6 +33,7 @@ void setup() {
   pinMode (tempEncoderPinB, INPUT);
   Serial.begin (9600);
   Serial<<"Welcome!"<<endl;
+  startzeit = millis();
 }
 
 
@@ -103,4 +108,13 @@ void kill(){
   }
 }
 
-
+void timeCounter() {
+  sekunden = millis() - startzeit;
+  sekunden = sekunden / 1000;
+  if (sekunden == 60){
+    minuten++;
+    startzeit = millis();
+  }
+  Serial<<"Es sind "<<minuten<<" Minuten und "<<sekunden<<" Sekunden vergangen."<<endl;
+  delay(1000);
+}
