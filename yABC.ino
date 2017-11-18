@@ -24,8 +24,7 @@ int timeEncoderPinB = 8;    //pin B for the time encoder
 int timeEncoderButtonPin = 9;   //pin for the button on the time encoder
 int tempEncoderButtonPin = 10;   //pin for the button on the temperature encoder
 
-int overshoot = 1;    //number of °C for heater overshoot
-int targetTemp = 20;    //target temperature
+int targetTemp = 50;    //initial target temperature
 
 int tempEncoderPinALast = LOW;    //last state of the temperature encoder pin A
 int timeEncoderPinALast = LOW;    //last state of the time encoder pin B
@@ -103,8 +102,8 @@ void loop() {
     }
   }
 
-//starts heater and timer if cycle started && actual temperature is lower then the target temperature + overshoot:
-if (sensors.getTempCByIndex(0) < targetTemp + overshoot && cyclestart == 1){
+//starts heater and timer if cycle started && actual temperature is lower then the target temperature:
+if (sensors.getTempCByIndex(0) < targetTemp && cyclestart == 1){
     digitalWrite(heaterPin, HIGH);
     timerStart = 1;
   }
