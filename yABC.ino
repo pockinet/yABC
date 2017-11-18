@@ -3,8 +3,8 @@
 #include <DallasTemperature.h>    //temperature-sensor library
 
 #define ONE_WIRE_BUS 2    //temperature input is on pin 2
-OneWire oneWire(ONE_WIRE_BUS);    //creates oneWire instance
-DallasTemperature sensors(&oneWire);    //creates sensors instance
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 
 long startingTime;    //needed for timecounter
 long isSeconds;     //actual seconds
